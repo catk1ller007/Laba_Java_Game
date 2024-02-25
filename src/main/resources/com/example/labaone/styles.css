@@ -5,6 +5,6 @@
 .button{
     -fx-background-radius: 8;
     -fx-border-radius: 8;
-    -fx-border-color: #000000;
-    -fx-background-color: rgba(207, 207, 207, 0.8);
+    -fx-border-color: #289EA9;
+    -fx-background-color: #1C505E;
 }
