@@ -1,5 +1,8 @@
 package com.example.labaone;
 
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.shape.Circle;
 import javafx.scene.shape.Polygon;
 
 public class Arrow {
@@ -33,5 +36,10 @@ public class Arrow {
     public void setLayoutY(double layoutY) {
         this.layoutY = layoutY;
         arrow.setLayoutY(layoutY);
+    }
+
+    public void resetPosArrow(double x, double y, Arrow arrow){
+        arrow.setLayoutX(x);
+        arrow.setLayoutY(y);
     }
 }

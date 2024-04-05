@@ -7,7 +7,7 @@
 <?import javafx.scene.shape.*?>
 <?import javafx.scene.text.*?>
 
-<VBox prefHeight="416.0" prefWidth="689.0" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.labaone.HelloController" >
+<VBox prefHeight="416.0" prefWidth="689.0" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.labaone.HelloController">
    <children>
       <FlowPane prefHeight="200.0" prefWidth="200.0">
          <children>
@@ -33,7 +33,7 @@
                         <Font name="Cambria Bold" size="19.0" />
                      </font>
                   </Label>
-                  <Label fx:id="scorePoints" text="0" textFill="WHITE">
+                  <Label fx:id="shootsPoints" text="0" textFill="WHITE">
                      <font>
                         <Font name="Roboto" size="19.0" />
                      </font>
@@ -46,7 +46,7 @@
                         <Insets top="20.0" />
                      </VBox.margin>
                   </Label>
-                  <Label fx:id="shootScore" text="0" textFill="WHITE">
+                  <Label fx:id="shoots" text="0" textFill="WHITE">
                      <VBox.margin>
                         <Insets top="10.0" />
                      </VBox.margin>

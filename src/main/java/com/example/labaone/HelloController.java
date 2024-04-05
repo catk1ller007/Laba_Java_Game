@@ -15,8 +15,8 @@ public class HelloController {
 
     public int orientationBig = 1;
     public int orientationSmall = 1;
-    public int scoreForShoot = 0;
-    public  int scoreForHit = 0;
+    public int numberOfShots = 0;
+    public  int numberOfHits = 0;
 
     private boolean isPaused = false;
     private boolean isShoot = false;
@@ -26,88 +26,102 @@ public class HelloController {
     public Circle Big_Circle;
     @FXML
     public Circle Small_Circle;
-
     public Arrow arrow;
+    public Target BigTarget;
+    public Target SmalTarget;
+    public TextView Shoot;
 
     @FXML
     public void initialize() {
         arrow = new Arrow(Strela, Strela.getLayoutX(), Strela.getLayoutY());
+        BigTarget = new Target(Big_Circle);
+        SmalTarget = new Target(Small_Circle);
+        Shoot = new TextView(shoots, shootsPoints);
     }
-//    @FXML
-//    public void PauseGame() {
-//        isPaused = !isPaused;
-//    }
+    @FXML
+    public Label shoots;
+    @FXML
+    public Label shootsPoints;
+    private final Object lock = new Object();
+
     @FXML
     public void PauseGame() {
-        synchronized (lock) {
-            if (isPaused) {
-                isPaused = false;
-                lock.notify(); // Уведомление о продолжении выполнения
-            } else {
-                isPaused = true;
+        isPaused = !isPaused;
+    }
+    @FXML
+    public void Shoot() {
+        if (gameThread !=null){
+            if (isPaused){
+                numberOfHits = numberOfShots;
+            }
+            else {
+                if (!isShoot) {
+                    isShoot = true;
+                    numberOfShots += 1;
+                    Shoot.addShot(numberOfShots);
+                    //shootScore.setText(Integer.toString(scoreForShoot));
+                }
             }
         }
     }
 
-    @FXML
-    public Label shootScore;
-    @FXML
-    public Label scorePoints;
-    private final Object lock = new Object();
-    @FXML
-    public void Shoot() {
-        if (!isShoot) {
-            isShoot = true;
-            scoreForShoot += 1;
-            shootScore.setText(Integer.toString(scoreForShoot));
-        }
-
-    }
-
-    public int orientCircle(int orent, Circle circle, int BL, int Fl){
-        if(orent == 1 && circle.getLayoutY() >= BL){
+    public int orientCircle(int orent, Target circle, int BL, int Fl){
+        if(circle.getLayoutY() >= BL){
             orent = -1;
-        } else if (orent == -1 && circle.getLayoutY() <= Fl) {
+        } else if (circle.getLayoutY() <= Fl) {
             orent = 1;
         }
         return orent;
     }
 
-    private void checkHit(double arrowX, double arrowY, double targetCenterX, double targetCenterY, double targetRadius, int points) {
-        // Проверяем, попала ли стрела в мишень
-        if (HitTheTarget(arrowX, arrowY, targetCenterX, targetCenterY, targetRadius)) {
-            System.out.println("Попала в мишень!");
-            scoreForHit += points;
-            scorePoints.setText(Integer.toString(scoreForHit));
-            arrow.setLayoutX(74);
-            arrow.setLayoutY(146);
-            System.out.println(arrow.getLayoutY() + " 1");
-            isShoot = false;
-        }
-    }
+//    private void checkHit(double arrowX, double arrowY, double targetCenterX, double targetCenterY, double targetRadius, int points) {
+//        // Проверяем, попала ли стрела в мишень
+//        if (HitTheTarget(arrowX, arrowY, targetCenterX, targetCenterY, targetRadius)) {
+//            scoreForHit += points;
+//            scorePoints.setText(Integer.toString(scoreForHit));
+//            arrow.resetPosArrow(74, 146, arrow);
+//            isShoot = false;
+//        }
+//    }
 
-    private  void resetPos(double x, double y, Arrow s){
-        s.setLayoutX(x);
-        s.setLayoutY(y);
-    }
     private void checkShoot() {
         if (isShoot) {
             if (arrow.getLayoutX() >= IS_ON_PANE) {
-                resetPos(74, 146, arrow);
+                arrow.resetPosArrow(74, 146, arrow);
                 isShoot = false;
             } else if (!isPaused) {
                 arrow.move(5);
-                checkHit(arrow.getLayoutX(), arrow.getLayoutY(), Big_Circle.getLayoutX() - Big_Circle.getRadius(), Big_Circle.getLayoutY() - Big_Circle.getRadius(), Big_Circle.getRadius(), 1);
-                checkHit(arrow.getLayoutX(), arrow.getLayoutY(), Small_Circle.getLayoutX() - Small_Circle.getRadius(), Small_Circle.getLayoutY() - Small_Circle.getRadius(), Small_Circle.getRadius(), 2);
+
+                if(HitTheTarget(BigTarget, arrow)){
+                    numberOfHits += 1;
+                    Shoot.addShootScore(numberOfHits);
+                    //scorePoints.setText(Integer.toString(scoreForHit));
+                    arrow.resetPosArrow(74, 146, arrow);
+                    isShoot = false;
+                }
+                else if(HitTheTarget(SmalTarget, arrow)){
+                    numberOfHits += 2;
+                    Shoot.addShootScore(numberOfHits);
+                    //scorePoints.setText(Integer.toString(scoreForHit));
+                    arrow.resetPosArrow(74, 146, arrow);
+                    isShoot = false;
+                }
             }
         }
     }
 
-    private boolean HitTheTarget(double arrowX, double arrowY, double targetCenterX, double targetCenterY, double targetRadius) {
+    private boolean HitTheTarget(Target target, Arrow polygon) {
+        double arrowX = polygon.getLayoutX();
+        double arrowY = polygon.getLayoutY();
+        double targetCenterX = target.getLayoutX() - target.getRadius();
+        double targetCenterY = target.getLayoutY() - target.getRadius();
+        double targetRadius = target.getRadius();
+
         double distance = Math.sqrt(Math.pow(arrowX - targetCenterX, 2) + Math.pow(arrowY - targetCenterY, 2));
 
         return distance <= targetRadius;
     }
+
     @FXML
     public void StartGame(){
         if(gameThread != null && gameThread.isAlive()) {
@@ -118,30 +132,19 @@ public class HelloController {
         gameThread = new Thread(() -> {
 
                 while (!Thread.currentThread().isInterrupted()) {
-
-                    synchronized (lock) {
-                        while (isPaused) {
-                            try {
-                                lock.wait(); // Приостановка выполнения потока
-                            } catch (InterruptedException e) {
-                                Thread.currentThread().interrupt();
-                                System.out.println(e);
-                            }
-                        }
+                    if (isPaused){
+                        continue;
                     }
 
-                    System.out.println("Старт");
+                    System.out.println("Start");
                     Platform.runLater(()->{
 
-                            orientationBig = orientCircle(orientationBig, Big_Circle, BACK_LINE, FRONT_LINE + 10);
-                            orientationSmall = orientCircle(orientationSmall, Small_Circle,BACK_LINE + 10, FRONT_LINE);
+                            orientationBig = orientCircle(orientationBig, BigTarget, BACK_LINE, FRONT_LINE + 10);
+                            orientationSmall = orientCircle(orientationSmall, SmalTarget,BACK_LINE + 10, FRONT_LINE);
 
                             checkShoot();
-
-                                Big_Circle.setLayoutY(Big_Circle.getLayoutY() + (2 * orientationBig));
-                                Small_Circle.setLayoutY(Small_Circle.getLayoutY() + (4 * orientationSmall));
-
-
+                            BigTarget.moveTargetY(2 * orientationBig);
+                            SmalTarget.moveTargetY(4 * orientationSmall);
 
                         });
 
@@ -149,7 +152,6 @@ public class HelloController {
                         Thread.sleep(10);
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
-                        System.out.println(e);
                     }
                 }
         });
@@ -157,27 +159,27 @@ public class HelloController {
         gameThread.start();
     }
 
-
     @FXML
     public void StopGame(){
-        gameThread.interrupt();
+        if (gameThread != null) {
+            gameThread.interrupt();
+            try {
+                gameThread.join(); // Дожидаемся завершения потока
+            } catch (InterruptedException e) {
+                System.out.println(e);
+            }
+            if (!gameThread.isAlive()) {
+                Platform.runLater(() -> {
+                    BigTarget.resetPosTarget(177);
+                    SmalTarget.resetPosTarget(177);
 
-        try {
-            gameThread.join(); // Дожидаемся завершения потока
-        } catch (InterruptedException e) {
-            System.out.println(e);
-        }
-
-        if (!gameThread.isAlive()){
-            Platform.runLater(()->{
-                Big_Circle.setLayoutY(177);
-                Small_Circle.setLayoutY(177);
-                scoreForShoot = 0;
-                shootScore.setText(Integer.toString(0));
-                scorePoints.setText(Integer.toString(0));
-                resetPos(74, 146, arrow);
-                isShoot = false;
-            });
+                    numberOfShots = 0;
+                    numberOfHits = 0;
+                    Shoot.resetScore(numberOfShots, numberOfHits);
+                    arrow.resetPosArrow(74, 146, arrow);
+                    isShoot = false;
+                });
+            }
         }
     }
 }
